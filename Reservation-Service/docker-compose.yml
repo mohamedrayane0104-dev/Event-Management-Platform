@@ -1,0 +1,45 @@
+services:
+  mysql-reservation-db:
+    image: mysql:8.0
+    container_name: mysql-reservation-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: reservation_service_db
+      MYSQL_USER: reservation_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_reservation_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - microservices-network
+
+  reservation-service:
+    build: .
+    container_name: reservation-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-reservation-db:3306/reservation_service_db
+      SPRING_DATASOURCE_USERNAME: reservation_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EVENT_SERVICE_URL: http://event-service:8082
+      SERVER_PORT: 8083
+    depends_on:
+      mysql-reservation-db:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    name: microservices-network
+    driver: bridge
+
+volumes:
+  mysql_reservation_data:

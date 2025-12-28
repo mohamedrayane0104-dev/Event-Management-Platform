@@ -1,0 +1,43 @@
+services:
+  mysql-user-db:
+    image: mysql:8.0
+    container_name: mysql-user-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: user_service_db
+      MYSQL_USER: user_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_user_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - user-network
+
+  user-service:
+    build: .
+    container_name: user-service
+    ports:
+      - "8081:8080"   # <- map host 8081 to container 8080
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user-db:3306/user_service_db
+      SPRING_DATASOURCE_USERNAME: user_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      mysql-user-db:
+        condition: service_healthy
+    networks:
+      - user-network
+
+networks:
+  user-network:
+    driver: bridge
+
+volumes:
+  mysql_user_data:

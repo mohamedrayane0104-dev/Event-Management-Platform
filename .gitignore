@@ -1,0 +1,40 @@
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.log
+
+# Maven / Gradle
+target/
+*.class
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+!.mvn/wrapper/MavenWrapperDownloader.java
+
+# Frontend (non versionné / incomplet)
+frontend/
+
+# Docker / compose artifacts
+*.pid
+.docker/
+
+# Config / secrets (exemple)
+config/*.local.yml
+config/*.secret.yml
+
+# Logs / temp
+*.tmp
+*.swp
+*.swo
+*.orig
+*.bak
+*.rej
+
+# Coverage / reports
+**/coverage/
+**/surefire-reports/
+**/test-output/
+**/jacoco.exec
+**/jacoco-ut.exec

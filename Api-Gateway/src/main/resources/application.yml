@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Allow-Methods RETAIN_LAST
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: event-service
+          uri: lb://event-service
+          predicates:
+            - Path=/events/**
+          filters:
+            - RewritePath=/events/?(?<segment>.*), /api/events/${segment}
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**, /auth/**
+          filters:
+            - RewritePath=/users/?(?<segment>.*), /api/users/${segment}
+            - RewritePath=/auth/?(?<segment>.*), /api/auth/${segment}
+        - id: reservation-service
+          uri: lb://reservation-service
+          predicates:
+            - Path=/reservations/**
+          filters:
+            - RewritePath=/reservations/?(?<segment>.*), /api/reservations/${segment}
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payments/**
+          filters:
+            - RewritePath=/payments/?(?<segment>.*), /api/payments/${segment}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true

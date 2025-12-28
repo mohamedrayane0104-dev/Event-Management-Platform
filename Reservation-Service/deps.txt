@@ -1,0 +1,14 @@
+com.reservationservice:reservation-service:jar:1.0.0
+\- io.github.resilience4j:resilience4j-spring-boot2:jar:1.7.1:compile
+   +- io.github.resilience4j:resilience4j-spring:jar:1.7.0:compile
+   |  +- io.github.resilience4j:resilience4j-annotations:jar:1.7.0:compile
+   |  +- io.github.resilience4j:resilience4j-consumer:jar:1.7.0:compile
+   |  |  +- io.github.resilience4j:resilience4j-core:jar:1.7.0:compile
+   |  |  \- io.github.resilience4j:resilience4j-circularbuffer:jar:1.7.0:compile
+   |  \- io.github.resilience4j:resilience4j-framework-common:jar:1.7.0:compile
+   |     +- io.github.resilience4j:resilience4j-circuitbreaker:jar:1.7.0:compile
+   |     +- io.github.resilience4j:resilience4j-ratelimiter:jar:1.7.0:compile
+   |     +- io.github.resilience4j:resilience4j-retry:jar:1.7.0:compile
+   |     +- io.github.resilience4j:resilience4j-bulkhead:jar:1.7.0:compile
+   |     \- io.github.resilience4j:resilience4j-timelimiter:jar:1.7.0:compile
+   \- io.github.resilience4j:resilience4j-micrometer:jar:1.7.0:compile

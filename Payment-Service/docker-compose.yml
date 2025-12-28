@@ -1,0 +1,45 @@
+services:
+  mysql-payment-db:
+    image: mysql:8.0
+    container_name: mysql-payment-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: payment_service_db
+      MYSQL_USER: payment_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_payment_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - microservices-network
+
+  payment-service:
+    build: .
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-payment-db:3306/payment_service_db
+      SPRING_DATASOURCE_USERNAME: payment_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RESERVATION_SERVICE_URL: http://reservation-service:8083
+      SERVER_PORT: 8084
+    depends_on:
+      mysql-payment-db:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    name: microservices-network
+    driver: bridge
+
+volumes:
+  mysql_payment_data:

@@ -1,0 +1,233 @@
+version: '3.8'
+
+networks:
+  microservices-network:
+    name: microservices-network
+    driver: bridge
+
+services:
+  config-server:
+    build: ./Config-Server
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config:/config
+    networks:
+      - microservices-network
+
+  eureka-server:
+    build: ./Eureka-Server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+    networks:
+      - microservices-network
+
+  api-gateway:
+    build: ./Api-Gateway
+    container_name: api-gateway
+    depends_on:
+      - config-server
+      - eureka-server
+    environment:
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+    ports:
+      - "8080:8080"
+    networks:
+      - microservices-network
+
+  mysql-user-db:
+    image: mysql:8.0
+    container_name: mysql-user-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: user_service_db
+      MYSQL_USER: user_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_user_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - microservices-network
+
+  user-service:
+    build: ./User-Service
+    container_name: user-service
+    depends_on:
+      mysql-user-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user-db:3306/user_service_db
+      SPRING_DATASOURCE_USERNAME: user_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+      JWT_SECRET: ${JWT_SECRET:-0123456789ABCDEF0123456789ABCDEF}
+    ports:
+      - "8081:8080"
+    networks:
+      - microservices-network
+
+  mysql-event-db:
+    image: mysql:8.0
+    container_name: mysql-event-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: event_service_db
+      MYSQL_USER: event_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_event_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - microservices-network
+
+  event-service:
+    build: ./Event-Service
+    container_name: event-service
+    depends_on:
+      mysql-event-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-event-db:3306/event_service_db
+      SPRING_DATASOURCE_USERNAME: event_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_PORT: 8082
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+    ports:
+      - "8082:8082"
+    networks:
+      - microservices-network
+
+  mysql-reservation-db:
+    image: mysql:8.0
+    container_name: mysql-reservation-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: reservation_service_db
+      MYSQL_USER: reservation_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_reservation_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - microservices-network
+
+  reservation-service:
+    build: ./Reservation-Service
+    container_name: reservation-service
+    depends_on:
+      mysql-reservation-db:
+        condition: service_healthy
+      event-service:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-reservation-db:3306/reservation_service_db
+      SPRING_DATASOURCE_USERNAME: reservation_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EVENT_SERVICE_URL: http://event-service:8082
+      SERVER_PORT: 8083
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+      JWT_SECRET: ${JWT_SECRET:-0123456789ABCDEF0123456789ABCDEF}
+    ports:
+      - "8083:8083"
+    networks:
+      - microservices-network
+
+  mysql-payment-db:
+    image: mysql:8.0
+    container_name: mysql-payment-service
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: payment_service_db
+      MYSQL_USER: payment_service
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_payment_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - microservices-network
+
+  payment-service:
+    build: ./Payment-Service
+    container_name: payment-service
+    depends_on:
+      mysql-payment-db:
+        condition: service_healthy
+      reservation-service:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-payment-db:3306/payment_service_db
+      SPRING_DATASOURCE_USERNAME: payment_service
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RESERVATION_SERVICE_URL: http://reservation-service:8083
+      SERVER_PORT: 8084
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka
+      CONFIG_SERVER_URL: http://config-server:8888
+    ports:
+      - "8084:8084"
+    networks:
+      - microservices-network
+
+  frontend:
+    build: ./frontend
+    container_name: event-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - microservices-network
+
+volumes:
+  mysql_user_data:
+  mysql_event_data:
+  mysql_reservation_data:
+  mysql_payment_data:
