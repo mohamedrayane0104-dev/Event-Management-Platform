@@ -38,3 +38,5 @@ config/*.secret.yml
 **/test-output/
 **/jacoco.exec
 **/jacoco-ut.exec
+
+config/
