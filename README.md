@@ -44,6 +44,3 @@ Architecture microservices Dockerisée pour gérer des événements, réservatio
 ## Bases de données
 - 4 MySQL isolées (event/user/reservation/payment) sur le réseau Docker `microservices-network`.  
 - Les conteneurs sont créés par `docker-compose.yml` avec leurs ports exposés (3307-3310).
-
-## Frontend (bonus)
-- Angular servi par nginx (4200) qui consomme l’API Gateway. Rafraîchir (Ctrl+F5) après rebuild.
